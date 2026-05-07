@@ -38,7 +38,12 @@ COPY --chown=omaterm:omaterm bin/ /home/omaterm/.local/bin/
 RUN chmod +x /home/omaterm/.local/bin/*
 
 # Auto-start tmux in .bashrc
-RUN echo 'if [[ -z $TMUX ]]; then t; fi' >> /home/omaterm/.bashrc
+RUN cat >> /home/omaterm/.bashrc <<'EOF'
+
+if [[ -z $TMUX ]]; then
+  t
+fi
+EOF
 
 # Install Ruby + Node via mise
 RUN eval "$(mise activate bash)" && \

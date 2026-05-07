@@ -31,8 +31,15 @@ install_configs() {
   echo "✓ Neovim"
   echo "✓ Starship"
 
-  if ! grep -q "if \[\[ -z \$TMUX \]\]" "$HOME/.bashrc" 2>/dev/null; then
-    cat >>"$HOME/.bashrc" <<'EOF'
+  local shell_rc
+  case "$(basename "$SHELL")" in
+    zsh) shell_rc="$HOME/.zshrc" ;;
+    *) shell_rc="$HOME/.bashrc" ;;
+  esac
+
+  if ! grep -qF '[[ -z $TMUX ]]' "$shell_rc" 2>/dev/null; then
+    cat >>"$shell_rc" <<'EOF'
+
 if [[ -z $TMUX ]]; then
   t
 fi
