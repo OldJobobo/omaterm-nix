@@ -141,7 +141,7 @@ ensure_install_user() {
     section "Creating user $username..."
     useradd -m -s /bin/bash "$username"
     echo "Set a password for $username. You'll use it for sudo during install."
-    passwd "$username"
+    passwd "$username" </dev/tty
   fi
 
   admin_group="$(admin_group_for_os "$os_id")"
