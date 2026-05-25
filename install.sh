@@ -316,23 +316,46 @@ print_nixos_instructions() {
 Omaterm detected NixOS.
 
 NixOS systems should install Omaterm declaratively instead of running the
-imperative Arch/Debian/Fedora installer. Add the Omaterm module to your flake:
+imperative Arch/Debian/Fedora installer.
+
+For a fresh headless system, run:
+
+  sudo nix --extra-experimental-features 'nix-command flakes' run github:omacom-io/omaterm#nixos-bootstrap
+
+Or add the Omaterm modules to your flake manually:
 
   {
-    inputs.omaterm.url = "github:omacom-io/omaterm";
+    inputs = {
+      omaterm.url = "github:omacom-io/omaterm";
 
-    outputs = { nixpkgs, omaterm, ... }: {
+      home-manager = {
+        url = "github:nix-community/home-manager";
+        inputs.nixpkgs.follows = "nixpkgs";
+      };
+    };
+
+    outputs = { nixpkgs, home-manager, omaterm, ... }: {
       nixosConfigurations.server = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
+          ./hardware-configuration.nix
           omaterm.nixosModules.omaterm
+          home-manager.nixosModules.home-manager
           {
             programs.omaterm = {
               enable = true;
               user = "john";
+              createUser = true;
+              authorizedKeys = [ "ssh-ed25519 AAAA..." ];
               enableDocker = true;
               enableSSH = true;
               enableTailscale = false;
+            };
+
+            home-manager.users.john = {
+              imports = [ omaterm.homeManagerModules.omaterm ];
+              programs.omaterm.enable = true;
+              home.stateVersion = "25.05";
             };
           }
         ];
