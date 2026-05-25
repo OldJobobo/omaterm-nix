@@ -2,6 +2,12 @@
 
 # Reinstalls Omaterm with missing packages and default configs.
 
+if [ -f /etc/NIXOS ]; then
+  echo "Omaterm is managed declaratively on NixOS."
+  echo "Refresh it with: sudo nixos-rebuild switch --flake .#<host>"
+  exit 0
+fi
+
 if gum confirm "Refresh Omaterm (including overwriting configs)?"; then
   curl -fsSL https://omaterm.org/install | bash
 fi

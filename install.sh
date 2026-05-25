@@ -21,7 +21,9 @@ section() {
 }
 
 detect_os() {
-  if [ -f /etc/arch-release ]; then
+  if [ -f /etc/NIXOS ]; then
+    echo "nixos"
+  elif [ -f /etc/arch-release ]; then
     echo "arch"
   elif [ -f /etc/debian_version ]; then
     echo "debian"
@@ -309,6 +311,44 @@ finish() {
   echo "Now logout and back in for everything to take effect"
 }
 
+print_nixos_instructions() {
+  cat <<'EOF'
+Omaterm detected NixOS.
+
+NixOS systems should install Omaterm declaratively instead of running the
+imperative Arch/Debian/Fedora installer. Add the Omaterm module to your flake:
+
+  {
+    inputs.omaterm.url = "github:omacom-io/omaterm";
+
+    outputs = { nixpkgs, omaterm, ... }: {
+      nixosConfigurations.server = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          omaterm.nixosModules.omaterm
+          {
+            programs.omaterm = {
+              enable = true;
+              user = "john";
+              enableDocker = true;
+              enableSSH = true;
+              enableTailscale = false;
+            };
+          }
+        ];
+      };
+    };
+  }
+
+Then apply it with:
+
+  sudo nixos-rebuild switch --flake .#server
+
+The NixOS path does not install packages with curl, npm, AUR, systemctl, or
+mutable profile commands.
+EOF
+}
+
 configure_parallel_builds() {
   section "Configuring parallel compilation..."
   export MAKEFLAGS="-j$(nproc)"
@@ -359,8 +399,13 @@ section "Installing Omaterm..."
 
 if ! OS_ID="$(detect_os)"; then
   echo "Error: Unsupported operating system"
-  echo "Omaterm supports Arch Linux, Debian/Ubuntu, and Fedora"
+  echo "Omaterm supports Arch Linux, Debian/Ubuntu, Fedora, and NixOS"
   exit 1
+fi
+
+if [ "$OS_ID" = "nixos" ]; then
+  print_nixos_instructions
+  exit 0
 fi
 
 # Ensure correct git is installed

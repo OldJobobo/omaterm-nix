@@ -4,6 +4,12 @@ set -euo pipefail
 # Add SSH public key for remote access
 # https://github.com/basecamp/omaterm
 
+if [ -f /etc/NIXOS ]; then
+  echo "SSH is managed declaratively on NixOS."
+  echo "Configure services.openssh and users.users.<name>.openssh.authorizedKeys in your NixOS config."
+  exit 0
+fi
+
 if gum confirm "Add SSH public key for remote access?"; then
   mkdir -p "$HOME/.ssh"
   chmod 700 "$HOME/.ssh"
