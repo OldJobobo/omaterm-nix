@@ -41,7 +41,9 @@ fi
 if command -v tailscale &>/dev/null && ! tailscale status &>/dev/null; then
   echo
   if gum confirm "Connect to Tailscale?"; then
-    sudo tailscaled &>/dev/null &
+    if [ ! -f /etc/NIXOS ]; then
+      sudo tailscaled &>/dev/null &
+    fi
     sudo tailscale up --ssh --accept-routes
   fi
 fi
