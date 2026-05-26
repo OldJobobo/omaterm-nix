@@ -66,6 +66,151 @@ confirm() {
   esac
 }
 
+detect_boot_mode() {
+  if [ -d /sys/firmware/efi ]; then
+    echo "uefi"
+  else
+    echo "bios"
+  fi
+}
+
+detect_efi_mount_point() {
+  if findmnt --mountpoint /boot/efi >/dev/null 2>&1; then
+    echo "/boot/efi"
+  elif findmnt --mountpoint /boot >/dev/null 2>&1; then
+    echo "/boot"
+  else
+    echo "/boot"
+  fi
+}
+
+root_parent_disk() {
+  local source pkname
+
+  source="$(findmnt -no SOURCE / 2>/dev/null || true)"
+  if [ -z "$source" ]; then
+    return 1
+  fi
+
+  pkname="$(lsblk -no PKNAME "$source" 2>/dev/null | head -n 1 || true)"
+  if [ -z "$pkname" ]; then
+    return 1
+  fi
+
+  echo "/dev/$pkname"
+}
+
+partition_table_type() {
+  local disk="$1"
+
+  lsblk -ndo PTTYPE "$disk" 2>/dev/null | head -n 1
+}
+
+has_bios_boot_partition() {
+  local disk="$1"
+
+  lsblk -nrpo PARTTYPE "$disk" 2>/dev/null \
+    | grep -qi '^21686148-6449-6e6f-744e-656564454649$'
+}
+
+write_bootloader_module() {
+  local mode="$1"
+  local module_file="$2"
+  local bootloader_tmp
+  local efi_mount
+  local grub_device
+  local partition_table
+
+  bootloader_tmp="$(mktemp)"
+  tmpfiles+=("$bootloader_tmp")
+
+  case "$mode" in
+    uefi)
+      efi_mount="$(detect_efi_mount_point)"
+      cat > "$bootloader_tmp" <<EOF
+{ lib, ... }:
+
+{
+  boot.loader.grub.enable = lib.mkForce false;
+  boot.loader.systemd-boot.enable = lib.mkForce true;
+  boot.loader.efi.canTouchEfiVariables = lib.mkForce true;
+  boot.loader.efi.efiSysMountPoint = "$efi_mount";
+}
+EOF
+      ;;
+    bios)
+      grub_device="${OMATERM_GRUB_DEVICE:-$(root_parent_disk || true)}"
+      if [ -z "$grub_device" ]; then
+        cat >&2 <<EOF
+Could not detect the root disk for BIOS GRUB installation.
+Set OMATERM_GRUB_DEVICE=/dev/disk/by-id/... and rerun the bootstrap.
+EOF
+        exit 1
+      fi
+
+      partition_table="$(partition_table_type "$grub_device")"
+      if [ "$partition_table" = "gpt" ] && ! has_bios_boot_partition "$grub_device"; then
+        cat >&2 <<EOF
+Detected legacy BIOS boot on $grub_device, but no BIOS Boot Partition exists.
+GRUB cannot be installed permanently to a GPT disk without that partition.
+
+Create a 1 MiB BIOS Boot Partition on $grub_device, or reinstall/boot NixOS in
+UEFI mode so Omaterm can use systemd-boot.
+EOF
+        exit 1
+      fi
+
+      cat > "$bootloader_tmp" <<EOF
+{ lib, ... }:
+
+{
+  boot.loader.systemd-boot.enable = lib.mkForce false;
+  boot.loader.grub.enable = lib.mkForce true;
+  boot.loader.grub.device = lib.mkForce "$grub_device";
+  boot.loader.grub.efiSupport = lib.mkForce false;
+}
+EOF
+      ;;
+    *)
+      echo "Unknown boot mode: $mode" >&2
+      exit 1
+      ;;
+  esac
+
+  sudo install -m 0644 "$bootloader_tmp" "$module_file"
+}
+
+run_rebuild() {
+  local flake_ref="/etc/nixos#$host"
+
+  if sudo nixos-rebuild switch --flake "$flake_ref"; then
+    return 0
+  fi
+
+  cat >&2 <<EOF
+
+nixos-rebuild switch failed.
+
+If the build succeeded but activation failed while installing the bootloader,
+you can still activate Omaterm for the running system with nixos-rebuild test.
+That does not update the bootloader or make this generation the boot default.
+Fix the bootloader configuration before relying on a reboot.
+EOF
+
+  if confirm "Retry activation without updating the bootloader?"; then
+    sudo nixos-rebuild test --flake "$flake_ref"
+    cat <<EOF
+
+Activated Omaterm for the running system only.
+After fixing the bootloader, persist this generation with:
+
+  sudo nixos-rebuild switch --flake $flake_ref
+EOF
+  else
+    return 1
+  fi
+}
+
 if [ -e /etc/nixos/flake.nix ] && [ "${OMATERM_OVERWRITE_NIXOS_FLAKE:-0}" != "1" ]; then
   echo "/etc/nixos/flake.nix already exists."
   echo "Set OMATERM_OVERWRITE_NIXOS_FLAKE=1 to replace it."
@@ -83,6 +228,9 @@ host="$(prompt "NixOS host name" "${HOSTNAME:-server}")"
 user="$(prompt "Omaterm user" "omaterm")"
 ssh_key="$(prompt_optional "SSH public key for $user (leave empty to skip)")"
 system="$(system_arch)"
+boot_mode="$(detect_boot_mode)"
+bootloader_module="./omaterm-bootloader.nix"
+bootloader_module_path="/etc/nixos/omaterm-bootloader.nix"
 
 validate_hostname "$host"
 validate_username "$user"
@@ -93,7 +241,8 @@ if [ -n "$ssh_key" ]; then
 fi
 
 tmpfile="$(mktemp)"
-trap 'rm -f "$tmpfile"' EXIT
+tmpfiles=("$tmpfile")
+trap 'rm -f "${tmpfiles[@]}"' EXIT
 
 cat > "$tmpfile" <<EOF
 {
@@ -113,6 +262,7 @@ cat > "$tmpfile" <<EOF
       system = "$system";
       modules = [
         ./configuration.nix
+        $bootloader_module
         omaterm.nixosModules.omaterm
         home-manager.nixosModules.home-manager
         ({ lib, ... }: {
@@ -145,16 +295,23 @@ cat > "$tmpfile" <<EOF
 EOF
 
 sudo install -d /etc/nixos
+write_bootloader_module "$boot_mode" "$bootloader_module_path"
 sudo install -m 0644 "$tmpfile" /etc/nixos/flake.nix
 
+if [ "${OMATERM_OVERWRITE_NIXOS_FLAKE:-0}" = "1" ] && [ -e /etc/nixos/flake.lock ]; then
+  sudo rm -f /etc/nixos/flake.lock
+  echo "Removed /etc/nixos/flake.lock so inputs can be locked from the new flake."
+fi
+
 echo "Wrote /etc/nixos/flake.nix for host '$host' and user '$user'."
+echo "Wrote $bootloader_module_path for detected $boot_mode boot."
 
 if [ -z "$ssh_key" ]; then
   echo "No SSH key was configured. Add a key or password before relying on remote access."
 fi
 
 if confirm "Run nixos-rebuild now?"; then
-  sudo nixos-rebuild switch --flake "/etc/nixos#$host"
+  run_rebuild
 else
   echo "Apply it later with: sudo nixos-rebuild switch --flake /etc/nixos#$host"
 fi

@@ -24,6 +24,19 @@ For a fresh headless system, run the bootstrap and answer the prompts:
 sudo nix --extra-experimental-features 'nix-command flakes' run github:OldJobobo/omaterm-nix/nixos#nixos-bootstrap
 ```
 
+The bootstrap writes `/etc/nixos/flake.nix` and an imported
+`/etc/nixos/omaterm-bootloader.nix` bootloader module. The bootloader module is
+generated from the machine's current boot mode:
+
+- UEFI systems use systemd-boot and disable GRUB.
+- Legacy BIOS systems use GRUB on the detected root disk.
+- Legacy BIOS systems on GPT must already have a BIOS Boot Partition; without
+  that partition, GRUB cannot be installed permanently.
+
+When rerun with `OMATERM_OVERWRITE_NIXOS_FLAKE=1`, the bootstrap also removes
+`/etc/nixos/flake.lock` so Nix locks the refreshed inputs instead of reusing an
+older failed bootstrap lock file.
+
 Or initialize a starter flake:
 
 ```bash
@@ -85,6 +98,35 @@ Then run:
 
 ```bash
 sudo nixos-rebuild switch --flake .#server
+```
+
+### Bootloader activation failure
+
+The bootstrap imports your existing `/etc/nixos/configuration.nix`, then imports
+`/etc/nixos/omaterm-bootloader.nix` after it so stale bootloader settings can be
+overridden. If `nixos-rebuild switch` still fails while installing GRUB, for
+example with:
+
+```text
+this GPT partition label contains no BIOS Boot Partition
+embedding is not possible
+Failed to install bootloader
+```
+
+fix the bootloader settings in `/etc/nixos/configuration.nix` before relying on
+a reboot. On legacy BIOS with GPT, this usually means creating a 1 MiB BIOS Boot
+Partition or reinstalling/booting in UEFI mode. To activate Omaterm for the
+running system while you fix that, run:
+
+```bash
+sudo nixos-rebuild test --flake /etc/nixos#YOUR_HOST
+```
+
+`test` activates the system without updating the bootloader. After the
+bootloader config is fixed, make it persistent with:
+
+```bash
+sudo nixos-rebuild switch --flake /etc/nixos#YOUR_HOST
 ```
 
 ## What it sets up
