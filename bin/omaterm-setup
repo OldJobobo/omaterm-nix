@@ -3,6 +3,30 @@ set -euo pipefail
 
 MARKER="$HOME/.omaterm-setup-done"
 
+case "${1:-}" in
+  --rerun|--force)
+    rm -f "$MARKER"
+    shift
+    ;;
+  --reset)
+    rm -f "$MARKER"
+    echo "Omaterm setup marker removed."
+    exit 0
+    ;;
+  --help|-h)
+    cat <<'EOF'
+Usage: omaterm-setup [--rerun|--force|--reset]
+
+Runs the first-time Omaterm setup, then starts zsh.
+
+Options:
+  --rerun, --force  Remove the setup marker and run setup now.
+  --reset           Remove the setup marker and exit.
+EOF
+    exit 0
+    ;;
+esac
+
 if [ -f "$MARKER" ]; then
   exec bash -l "$@"
 fi
