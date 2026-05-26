@@ -7,19 +7,19 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    omaterm.url = "github:omacom-io/omaterm";
+    omaterm.url = "github:OldJobobo/omaterm-nix/nixos";
   };
 
   outputs = { nixpkgs, home-manager, omaterm, ... }: {
     nixosConfigurations.server = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
-        ./hardware-configuration.nix
+        ./configuration.nix
         omaterm.nixosModules.omaterm
         home-manager.nixosModules.home-manager
-        {
-          system.stateVersion = "25.05";
-          networking.hostName = "server";
+        ({ lib, ... }: {
+          system.stateVersion = lib.mkDefault "25.05";
+          networking.hostName = lib.mkForce "server";
           nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
           programs.omaterm = {
@@ -41,7 +41,7 @@
             programs.omaterm.enable = true;
             home.stateVersion = "25.05";
           };
-        }
+        })
       ];
     };
   };

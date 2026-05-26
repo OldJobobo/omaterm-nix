@@ -21,13 +21,13 @@ Use the NixOS module instead of the shell installer.
 For a fresh headless system, run the bootstrap and answer the prompts:
 
 ```bash
-sudo nix --extra-experimental-features 'nix-command flakes' run github:omacom-io/omaterm#nixos-bootstrap
+sudo nix --extra-experimental-features 'nix-command flakes' run github:OldJobobo/omaterm-nix/nixos#nixos-bootstrap
 ```
 
 Or initialize a starter flake:
 
 ```bash
-nix flake init -t github:omacom-io/omaterm#headless
+nix flake init -t github:OldJobobo/omaterm-nix/nixos#headless
 ```
 
 Manual flake example:
@@ -42,18 +42,19 @@ Manual flake example:
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    omaterm.url = "github:omacom-io/omaterm";
+    omaterm.url = "github:OldJobobo/omaterm-nix/nixos";
   };
 
   outputs = { nixpkgs, home-manager, omaterm, ... }: {
     nixosConfigurations.server = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
-        ./hardware-configuration.nix
+        ./configuration.nix
         omaterm.nixosModules.omaterm
         home-manager.nixosModules.home-manager
-        {
-          system.stateVersion = "25.05";
+        ({ lib, ... }: {
+          system.stateVersion = lib.mkDefault "25.05";
+          networking.hostName = lib.mkForce "server";
           nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
           programs.omaterm = {
@@ -73,7 +74,7 @@ Manual flake example:
             programs.omaterm.enable = true;
             home.stateVersion = "25.05";
           };
-        }
+        })
       ];
     };
   };

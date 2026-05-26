@@ -72,7 +72,13 @@ if [ -e /etc/nixos/flake.nix ] && [ "${OMATERM_OVERWRITE_NIXOS_FLAKE:-0}" != "1"
   exit 1
 fi
 
-flake_url="${OMATERM_FLAKE_URL:-github:omacom-io/omaterm}"
+if [ ! -e /etc/nixos/configuration.nix ]; then
+  echo "/etc/nixos/configuration.nix does not exist."
+  echo "Omaterm needs the existing NixOS config so bootloader and filesystem settings are preserved."
+  exit 1
+fi
+
+flake_url="${OMATERM_FLAKE_URL:-github:OldJobobo/omaterm-nix/nixos}"
 host="$(prompt "NixOS host name" "${HOSTNAME:-server}")"
 user="$(prompt "Omaterm user" "omaterm")"
 ssh_key="$(prompt_optional "SSH public key for $user (leave empty to skip)")"
@@ -106,12 +112,12 @@ cat > "$tmpfile" <<EOF
     nixosConfigurations."$host" = nixpkgs.lib.nixosSystem {
       system = "$system";
       modules = [
-        ./hardware-configuration.nix
+        ./configuration.nix
         omaterm.nixosModules.omaterm
         home-manager.nixosModules.home-manager
-        {
-          system.stateVersion = "25.05";
-          networking.hostName = "$host";
+        ({ lib, ... }: {
+          system.stateVersion = lib.mkDefault "25.05";
+          networking.hostName = lib.mkForce "$host";
           nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
           programs.omaterm = {
@@ -131,7 +137,7 @@ cat > "$tmpfile" <<EOF
             programs.omaterm.enable = true;
             home.stateVersion = "25.05";
           };
-        }
+        })
       ];
     };
   };
