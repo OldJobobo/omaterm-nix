@@ -147,9 +147,12 @@ in
           openssh
           sudo
           less
+          curl
+          wget
           bat
           fd
           inetutils
+          nettools
           whois
           zsh
           starship
@@ -166,10 +169,16 @@ in
           ripgrep
           unzip
           luarocks
+          gcc
+          gnumake
+          pkg-config
+          openssl
           clang
           llvm
           rustc
           cargo
+          nodejs
+          ruby
           mise
           libyaml
           gh

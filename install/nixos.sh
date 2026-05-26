@@ -108,6 +108,10 @@ detect_boot_mode() {
   fi
 }
 
+detect_proxmox_serial_console() {
+  grep -qi proxmox /sys/class/dmi/id/product_name 2>/dev/null && [ -e /dev/ttyS0 ]
+}
+
 detect_efi_mount_point() {
   if findmnt --mountpoint /boot/efi >/dev/null 2>&1; then
     echo "/boot/efi"
@@ -266,9 +270,14 @@ boot_mode="$(detect_boot_mode)"
 bootloader_module="./omaterm-bootloader.nix"
 bootloader_module_path="/etc/nixos/omaterm-bootloader.nix"
 enable_tailscale="false"
+enable_serial_console="false"
 
 if prompt_confirm "Enable Tailscale" "yes"; then
   enable_tailscale="true"
+fi
+
+if detect_proxmox_serial_console && prompt_confirm "Proxmox VM detected with serial port. Enable serial console" "yes"; then
+  enable_serial_console="true"
 fi
 
 validate_hostname "$host"
@@ -330,6 +339,9 @@ cat > "$tmpfile" <<EOF
             };
             home.stateVersion = "25.05";
           };
+
+          systemd.services."serial-getty@ttyS0".wantedBy =
+            lib.mkIf $enable_serial_console [ "getty.target" ];
         })
       ];
     };

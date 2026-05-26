@@ -137,7 +137,7 @@ sudo nixos-rebuild switch --flake /etc/nixos#YOUR_HOST
 
 - **Shell**: Zsh with starship prompt, fzf, eza, zoxide
 - **Editors**: Neovim (LazyVim), opencode, claude-code
-- **Dev tools**: mise, docker, GitHub CLI (`gh`), lazygit, lazydocker
+- **Dev tools**: build tools, Node, Ruby, mise, docker, GitHub CLI (`gh`), lazygit, lazydocker
 - **Networking**: SSH, tailscale
 - **Git**: Interactive config for user name/email, helpful aliases
 
@@ -146,6 +146,11 @@ and helper scripts. The Home Manager module manages the repo-owned user config
 for Neovim, Starship, Lazygit, shell aliases, and tmux auto-start. It also
 installs pinned LazyVim starter and Omadots config files declaratively, then
 layers Omaterm's Neovim overrides on top.
+
+The NixOS bootstrap aims to mirror the upstream Arch/Debian/Fedora installer:
+it enables Docker, SSH, Tailscale, AI tools, the Omaterm helper commands, and
+the same first-run setup prompts. On Proxmox VMs with `/dev/ttyS0`, it also
+offers to enable the serial console declaratively.
 
 ## Docker
 

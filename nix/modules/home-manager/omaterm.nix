@@ -113,9 +113,11 @@ in
       home.packages =
         (with pkgs; [
           bat
+          curl
           fd
           git
           gh
+          wget
           zsh
           starship
           fzf
@@ -131,6 +133,8 @@ in
           unzip
           lazygit
           lazydocker
+          nodejs
+          ruby
           omatermScripts
         ])
         ++ lib.optional (tldrPackage != null) tldrPackage
