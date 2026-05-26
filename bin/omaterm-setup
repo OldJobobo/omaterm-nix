@@ -31,6 +31,39 @@ if [ -f "$MARKER" ]; then
   exec bash -l "$@"
 fi
 
+prompt_value() {
+  local label="$1"
+  local default="${2:-}"
+  local value
+
+  if [ -n "$default" ]; then
+    printf "%s [%s]: " "$label" "$default" > /dev/tty
+  else
+    printf "%s: " "$label" > /dev/tty
+  fi
+
+  IFS= read -r value < /dev/tty
+  echo "${value:-$default}"
+}
+
+configure_git_identity() {
+  local name email
+
+  name="$(git config --global user.name 2>/dev/null || true)"
+  email="$(git config --global user.email 2>/dev/null || true)"
+
+  name="$(prompt_value "Git user name" "$name")"
+  email="$(prompt_value "Git email" "$email")"
+
+  if [ -z "$name" ] || [ -z "$email" ]; then
+    echo "Skipping Git identity; name and email are both required."
+    return
+  fi
+
+  git config --file "$HOME/.gitconfig" user.name "$name"
+  git config --file "$HOME/.gitconfig" user.email "$email"
+}
+
 echo
 echo " ▄██████▄    ▄▄▄▄███▄▄▄▄      ▄████████     ███        ▄████████    ▄████████   ▄▄▄▄███▄▄▄▄
 ███    ███ ▄██▀▀▀███▀▀▀██▄   ███    ███ ▀█████████▄   ███    ███   ███    ███ ▄██▀▀▀███▀▀▀██▄
@@ -48,8 +81,7 @@ echo
 # Git identity
 if ! git config --global user.name &>/dev/null || ! git config --global user.email &>/dev/null; then
   if gum confirm "Identify for Git?"; then
-    source ~/.config/shell/functions
-    git-id
+    configure_git_identity
   fi
 fi
 
