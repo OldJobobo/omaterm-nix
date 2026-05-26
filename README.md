@@ -78,13 +78,17 @@ Manual flake example:
             enableDocker = true;
             enableSSH = true;
             enableTailscale = true;
+            enableAI = true;
           };
 
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.users.john = {
             imports = [ omaterm.homeManagerModules.omaterm ];
-            programs.omaterm.enable = true;
+            programs.omaterm = {
+              enable = true;
+              enableAI = true;
+            };
             home.stateVersion = "25.05";
           };
         })

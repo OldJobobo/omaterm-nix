@@ -350,11 +350,15 @@ Or add the Omaterm modules to your flake manually:
               enableDocker = true;
               enableSSH = true;
               enableTailscale = true;
+              enableAI = true;
             };
 
             home-manager.users.john = {
               imports = [ omaterm.homeManagerModules.omaterm ];
-              programs.omaterm.enable = true;
+              programs.omaterm = {
+                enable = true;
+                enableAI = true;
+              };
               home.stateVersion = "25.05";
             };
           }

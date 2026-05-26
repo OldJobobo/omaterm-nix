@@ -317,13 +317,17 @@ cat > "$tmpfile" <<EOF
             enableDocker = true;
             enableSSH = true;
             enableTailscale = $enable_tailscale;
+            enableAI = true;
           };
 
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.users."$user" = {
             imports = [ omaterm.homeManagerModules.omaterm ];
-            programs.omaterm.enable = true;
+            programs.omaterm = {
+              enable = true;
+              enableAI = true;
+            };
             home.stateVersion = "25.05";
           };
         })
