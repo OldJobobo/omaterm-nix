@@ -77,7 +77,7 @@ Manual flake example:
             authorizedKeys = [ "ssh-ed25519 AAAA..." ];
             enableDocker = true;
             enableSSH = true;
-            enableTailscale = false;
+            enableTailscale = true;
           };
 
           home-manager.useGlobalPkgs = true;

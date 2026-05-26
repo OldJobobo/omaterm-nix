@@ -25,6 +25,40 @@ prompt_optional() {
   echo "$value"
 }
 
+prompt_confirm() {
+  local label="$1"
+  local default="$2"
+  local reply
+  local suffix
+
+  case "$default" in
+    yes) suffix="Y/n" ;;
+    no) suffix="y/N" ;;
+    *)
+      echo "Unknown prompt default: $default" >&2
+      exit 1
+      ;;
+  esac
+
+  printf "%s [%s] " "$label" "$suffix" > /dev/tty
+  IFS= read -r reply < /dev/tty
+  case "${reply,,}" in
+    "")
+      [ "$default" = "yes" ]
+      ;;
+    y|yes)
+      return 0
+      ;;
+    n|no)
+      return 1
+      ;;
+    *)
+      echo "Please answer yes or no." >&2
+      prompt_confirm "$label" "$default"
+      ;;
+  esac
+}
+
 validate_hostname() {
   local value="$1"
 
@@ -231,6 +265,11 @@ system="$(system_arch)"
 boot_mode="$(detect_boot_mode)"
 bootloader_module="./omaterm-bootloader.nix"
 bootloader_module_path="/etc/nixos/omaterm-bootloader.nix"
+enable_tailscale="false"
+
+if prompt_confirm "Enable Tailscale" "yes"; then
+  enable_tailscale="true"
+fi
 
 validate_hostname "$host"
 validate_username "$user"
@@ -277,7 +316,7 @@ cat > "$tmpfile" <<EOF
             authorizedKeys = $authorized_keys;
             enableDocker = true;
             enableSSH = true;
-            enableTailscale = false;
+            enableTailscale = $enable_tailscale;
           };
 
           home-manager.useGlobalPkgs = true;

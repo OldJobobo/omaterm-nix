@@ -31,7 +31,7 @@
             ];
             enableDocker = true;
             enableSSH = true;
-            enableTailscale = false;
+            enableTailscale = true;
           };
 
           home-manager.useGlobalPkgs = true;

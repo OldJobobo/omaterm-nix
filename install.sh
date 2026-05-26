@@ -349,7 +349,7 @@ Or add the Omaterm modules to your flake manually:
               authorizedKeys = [ "ssh-ed25519 AAAA..." ];
               enableDocker = true;
               enableSSH = true;
-              enableTailscale = false;
+              enableTailscale = true;
             };
 
             home-manager.users.john = {
