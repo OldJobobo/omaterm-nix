@@ -7,7 +7,7 @@ install_packages() {
   sudo apt-get remove -y containerd.io 2>/dev/null || true
   sudo apt-get install -y \
     build-essential git openssh-server libssl-dev sudo less net-tools whois \
-    zsh fzf zoxide tmux btop jq man-db \
+    fzf zoxide tmux btop jq man-db \
     vim luarocks \
     clang llvm rustc libyaml-0-2 \
     curl wget gpg \

@@ -4,7 +4,7 @@ set -euo pipefail
 MARKER="$HOME/.omaterm-setup-done"
 
 if [ -f "$MARKER" ]; then
-  exec zsh -l "$@"
+  exec bash -l "$@"
 fi
 
 echo
@@ -49,4 +49,4 @@ fi
 echo
 echo "✓ Setup complete!"
 touch "$MARKER"
-exec zsh -l "$@"
+exec bash -l "$@"

@@ -16,7 +16,7 @@ curl -fsSL https://omaterm.org/install | bash
 
 ## What it sets up
 
-- **Shell**: Zsh with starship prompt, fzf, eza, zoxide
+- **Shell**: Bash with starship prompt, fzf, eza, zoxide
 - **Editors**: Neovim (LazyVim), opencode, claude-code
 - **Dev tools**: mise, docker, GitHub CLI (`gh`), lazygit, lazydocker
 - **Networking**: SSH, tailscale

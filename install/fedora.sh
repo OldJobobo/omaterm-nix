@@ -5,7 +5,7 @@ install_packages() {
   section "Installing Fedora packages..."
   sudo dnf install -y @development-tools \
     git openssh-server sudo less net-tools whois \
-    zsh fzf zoxide tmux btop jq man-db \
+    fzf zoxide tmux btop jq man-db \
     vim luarocks \
     clang llvm rust cargo libyaml \
     curl wget \

@@ -213,11 +213,7 @@ install_configs() {
   echo "✓ Neovim"
   echo "✓ Starship"
 
-  local shell_rc
-  case "$(basename "$SHELL")" in
-    zsh) shell_rc="$HOME/.zshrc" ;;
-    *) shell_rc="$HOME/.bashrc" ;;
-  esac
+  local shell_rc="$HOME/.bashrc"
 
   if ! grep -qF '[[ -z $TMUX ]]' "$shell_rc" 2>/dev/null; then
     cat >>"$shell_rc" <<'EOF'
@@ -242,18 +238,18 @@ install_bins() {
 
 configure_shell() {
   section "Configuring shell..."
-  local username zsh_path current_shell
+  local username bash_path current_shell
 
   username="${USER:-$(id -un)}"
-  zsh_path="$(command -v zsh)"
+  bash_path="$(command -v bash)"
   current_shell="$(getent passwd "$username" | cut -d: -f7)"
 
-  if [ "$current_shell" != "$zsh_path" ]; then
-    as_root usermod -s "$zsh_path" "$username"
+  if [ "$current_shell" != "$bash_path" ]; then
+    as_root usermod -s "$bash_path" "$username"
   fi
 
-  export SHELL="$zsh_path"
-  echo "✓ Zsh"
+  export SHELL="$bash_path"
+  echo "✓ Bash"
 }
 
 install_mise_tools() {
@@ -331,7 +327,7 @@ run_installation() {
   # OS-specific package installation
   install_packages
 
-  # Make Zsh the default shell before Omadots writes shell config
+  # Make Bash the default shell before Omadots writes shell config
   configure_shell
 
   # Omadots

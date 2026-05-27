@@ -1,7 +1,7 @@
 install_packages() {
   local official_pkgs=(
     base-devel git openssh sudo less inetutils whois
-    zsh fzf zoxide tmux btop jq man-db
+    fzf zoxide tmux btop jq man-db
     vim luarocks
     clang llvm rust mise libyaml
     docker docker-buildx docker-compose
