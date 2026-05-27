@@ -6,29 +6,20 @@ RUN echo "MAKEFLAGS=\"-j$(nproc)\"" >> /etc/makepkg.conf
 # Update system and install official packages
 RUN pacman -Syu --needed --noconfirm \
       base-devel git openssh sudo less inetutils whois \
-      zsh starship fzf eza zoxide tmux btop jq gum man-db tldr \
-      vim neovim luarocks \
+      zsh fzf zoxide tmux btop jq man-db \
+      vim luarocks \
       clang llvm rust mise libyaml \
-      github-cli lazygit lazydocker opencode \
       docker docker-buildx docker-compose \
       kitty-terminfo && \
     pacman -Scc --noconfirm
 
-# Create a non-root user (needed for makepkg/yay)
+# Create a non-root user
 RUN useradd -m -s /usr/bin/zsh omaterm && \
     echo "omaterm ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/omaterm
 
 USER omaterm
 WORKDIR /home/omaterm
 ENV SHELL=/usr/bin/zsh
-
-# Install yay
-RUN git clone https://aur.archlinux.org/yay-bin.git /tmp/yay && \
-    cd /tmp/yay && makepkg -si --noconfirm && \
-    rm -rf /tmp/yay
-
-# Install AUR packages
-RUN yay -S --needed --noconfirm claude-code
 
 # Install omadots
 RUN curl -fsSL https://raw.githubusercontent.com/omacom-io/omadots/refs/heads/master/install.sh | bash
@@ -46,12 +37,11 @@ if [[ -z $TMUX ]]; then
 fi
 EOF
 
-# Install Ruby + Node via mise
+# Install user tools via mise
 RUN eval "$(mise activate bash)" && \
-    mise use -g node && \
     mise settings set ruby.compile false && \
     mise settings set idiomatic_version_file_enable_tools ruby && \
-    mise use -g ruby
+    mise use -g -y node ruby neovim starship eza gum gh lazygit lazydocker opencode claude-code
 
 ENV PATH="/home/omaterm/.local/share/mise/shims:/home/omaterm/.local/bin:${PATH}"
 

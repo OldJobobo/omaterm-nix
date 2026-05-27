@@ -257,14 +257,12 @@ configure_shell() {
 }
 
 install_mise_tools() {
-  section "Installing Ruby + Node..."
+  section "Installing mise tools..."
   eval "$(mise activate bash)" 2>/dev/null || true
-
-  mise use -g node
 
   mise settings set ruby.compile false
   mise settings set idiomatic_version_file_enable_tools ruby
-  mise use -g ruby
+  mise use -g -y node ruby neovim starship eza gum gh lazygit lazydocker opencode claude-code
 
   export PATH="$HOME/.local/share/mise/shims:$PATH"
 }
@@ -345,9 +343,6 @@ run_installation() {
 
   # Mise tooling
   install_mise_tools
-
-  # OS-specific tools that need npm (installed after mise provides node)
-  install_npm_tools
 
   # OS-specific service enabling
   enable_services
