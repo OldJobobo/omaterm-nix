@@ -11,7 +11,7 @@ install_packages() {
     vim luarocks \
     clang llvm rustc libyaml-0-2 \
     curl wget gpg \
-    docker.io docker-compose \
+    docker.io docker-compose-v2 \
     kitty-terminfo
 
   # docker-buildx (skip if docker-buildx-plugin from Docker's repo is already installed)
