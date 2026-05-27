@@ -258,7 +258,7 @@ install_mise_tools() {
 
   mise settings set ruby.compile false
   mise settings set idiomatic_version_file_enable_tools ruby
-  mise use -g -y node ruby neovim starship eza gum gh lazygit lazydocker opencode claude-code
+  mise use -g -y node ruby neovim starship eza gum gh lazygit lazydocker opencode claude-code codex
 
   export PATH="$HOME/.local/share/mise/shims:$PATH"
 }
