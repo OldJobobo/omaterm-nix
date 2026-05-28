@@ -130,6 +130,7 @@ in
           vim
           neovim
           ripgrep
+          tree-sitter
           unzip
           lazygit
           lazydocker
@@ -224,6 +225,16 @@ in
         ../../../config/nvim/lua/plugins/colorscheme.lua;
       xdg.configFile."nvim/lua/plugins/disable-news-alert.lua".source =
         ../../../config/nvim/lua/plugins/disable-news-alert.lua;
+      xdg.configFile."nvim/lua/plugins/nixos-tools.lua".text = ''
+        return {
+          {
+            "mason-org/mason.nvim",
+            opts = {
+              PATH = "append",
+            },
+          },
+        }
+      '';
       xdg.configFile."nvim/lua/plugins/snacks-animated-scrolling.lua".source =
         ../../../config/nvim/lua/plugins/snacks-animated-scrolling.lua;
       xdg.configFile."nvim/plugin/after/transparency.lua".source =
