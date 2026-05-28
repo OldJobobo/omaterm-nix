@@ -1,6 +1,8 @@
 # Omaterm
 
-An Omakase Terminal Setup For Arch/Debian/Ubuntu/Fedora/Docker by DHH
+An Omakase Terminal Setup For Arch/Debian/Ubuntu/Fedora/Docker by DHH.
+
+Think of it as a headless [Omarchy](https://omarchy.org).
 
 ## Requirements
 
