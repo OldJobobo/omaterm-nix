@@ -50,4 +50,5 @@ RUN eval "$(mise activate bash)" && \
 
 ENV PATH="/home/omaterm/.local/share/mise/shims:/home/omaterm/.local/bin:${PATH}"
 
-ENTRYPOINT ["/home/omaterm/.local/bin/omaterm-setup"]
+ENTRYPOINT ["/bin/bash"]
+CMD ["-l"]
