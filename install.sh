@@ -272,6 +272,29 @@ setup_docker_group() {
   fi
 }
 
+enable_ssh() {
+  local ssh_service
+
+  if systemctl cat sshd.service &>/dev/null; then
+    ssh_service="sshd.service"
+  elif systemctl cat ssh.service &>/dev/null; then
+    ssh_service="ssh.service"
+  else
+    echo "Error: Could not find an SSH systemd service"
+    return 1
+  fi
+
+  sudo systemctl enable --now "$ssh_service"
+  echo "✓ sshd"
+}
+
+enable_services() {
+  section "Enabling services..."
+
+  enable_docker
+  enable_ssh
+}
+
 interactive_setup() {
   section "Interactive setup..."
 
