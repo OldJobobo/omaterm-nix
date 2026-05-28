@@ -21,6 +21,11 @@ USER omaterm
 WORKDIR /home/omaterm
 ENV SHELL=/bin/bash
 
+# Install yay
+RUN git clone https://aur.archlinux.org/yay-bin.git /tmp/yay && \
+    cd /tmp/yay && makepkg -si --noconfirm && \
+    rm -rf /tmp/yay
+
 # Install omadots
 RUN curl -fsSL https://raw.githubusercontent.com/omacom-io/omadots/refs/heads/master/install.sh | bash
 
